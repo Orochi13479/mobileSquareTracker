@@ -11,8 +11,4 @@ robot with noise in the observation.
 # Running the Simulation
 1. roslaunch turtlebot3_gazebo turtlebot3_warehouse.launch
 2. Run script in MATLAB 2021b
-
 '''
-test
-'''
-'roslaunch'
