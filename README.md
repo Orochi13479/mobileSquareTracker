@@ -9,11 +9,11 @@ Turtlebot or Simulator and design the environment to control the
 robot with noise in the observation.
 
 # Running the Simulation
-1. roslaunch turtlebot3_gazebo turtlebot3_warehouse.launch
-2. Run script in MATLAB 2021b
+### Running the Simulation
 
-'''
-test
-'''
-'roslaunch'
-'x = 4'{:.ruby}
+```
+export TURTLEBOT3_MODEL=waffle
+roslaunch turtlebot3_gazebo turtlebot3_warehouse.launch
+
+```
+Once launhed Run the provided script in MATLAB 2021b using ROS melodic
