@@ -9,11 +9,13 @@ Turtlebot or Simulator and design the environment to control the
 robot with noise in the observation.
 
 # Running the Simulation
-### Running the Simulation
+To Launch the simulator and run the Square Following script open a terminal and input the below:
 
 ```
 export TURTLEBOT3_MODEL=waffle
 roslaunch turtlebot3_gazebo turtlebot3_warehouse.launch
-
 ```
-Once launhed Run the provided script in MATLAB 2021b using ROS melodic
+
+Once launched Run the provided script,imageProcessing.m, in MATLAB 2021b using ROS melodic.
+
+PROJECT HAS ONLY BEEN TESTED IN MATLAB 2021b USING ROS melodic.
