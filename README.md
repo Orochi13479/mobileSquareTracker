@@ -16,3 +16,4 @@ robot with noise in the observation.
 test
 '''
 'roslaunch'
+'x = 4'{:.ruby}
