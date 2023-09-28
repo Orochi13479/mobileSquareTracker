@@ -16,6 +16,6 @@ export TURTLEBOT3_MODEL=waffle
 roslaunch turtlebot3_gazebo turtlebot3_warehouse.launch
 ```
 
-Once launched Run the provided script,imageProcessing.m, in MATLAB 2021b using ROS melodic.
+Once launched Run the provided script, imageProcessing.m, in MATLAB 2021b using ROS melodic.
 
-PROJECT HAS ONLY BEEN TESTED IN MATLAB 2021b USING ROS melodic.
+**PROJECT HAS ONLY BEEN TESTED IN MATLAB 2021b USING ROS melodic.**
