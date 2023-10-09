@@ -7,7 +7,7 @@ close all;
 rosshutdown;
 %ip = "http://192.168.211.137:11311";
 %ip = "http://192.168.10.132:11311"; %Rosh IP
-%ip = "http://192.168.19.132:11311"; %Daniel IP
+ip = "http://192.168.19.132:11311"; %Daniel IP
 
 rosinit(ip)
 
