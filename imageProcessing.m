@@ -39,6 +39,12 @@ while true
     ptsData = detectKAZEFeatures(gsData);
     [featurePattern,validPtsPattern] = extractFeatures(squarePattern,ptsPattern);
     [featureData,validPtsData] = extractFeatures(gsData,ptsData);
+
+    % Feature Detection
+    % ptsPattern = detectSURFFeatures(squarePattern);
+    % ptsData = detectSURFFeatures(gsData);
+    % [featurePattern,validPtsPattern] = extractFeatures(squarePattern,ptsPattern);
+    % [featureData,validPtsData] = extractFeatures(gsData,ptsData);
     
     % Match pairs and display them
     indexPairs = matchFeatures(featurePattern,featureData);
