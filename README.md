@@ -11,11 +11,12 @@ robot with noise in the observation.
 # Running the Simulation
 To Launch the simulator and run the Square Following script open a terminal and input the below:
 
+##Terminal##
 ```
 export TURTLEBOT3_MODEL=waffle
-roslaunch turtlebot3_gazebo turtlebot3_warehouse.launch
+roslaunch turtlebot3_gazebo turtlebot3_testingTargetBox.launch 
 ```
 
-Once launched Run the provided script, imageProcessing.m, in MATLAB 2021b using ROS melodic.
+Once launched Run the #Initialise Section ONCE# in provided script, imageProcessing.m, then proceed to run the operation section in MATLAB 2021b using ROS melodic.
 
 **PROJECT HAS ONLY BEEN TESTED IN MATLAB 2021b USING ROS melodic.**
