@@ -19,7 +19,7 @@ depth = rossubscriber('/camera/depth/image_raw');
 odom = rossubscriber('/odom');
 
 % Reading Square pattern
-qrCode = imread('FollowMeQr.png');
+squarePattern = rgb2gray(imread('Initial_image.png'));
 
 %% Operation
 while true
@@ -31,12 +31,24 @@ while true
 
     % Pull Image and Depth data
     [rgbData,alpha]=readImage(rgb.LatestMessage);
+    gsData = rgb2gray(rgbData);
     [depthData,alpha]=readImage(depth.LatestMessage);
     
     % Feature Detection
+    ptsPattern = detectKAZEFeatures(squarePattern);
+    ptsData = detectKAZEFeatures(gsData);
+    [featurePattern,validPtsPattern] = extractFeatures(squarePattern,ptsPattern);
+    [featureData,validPtsData] = extractFeatures(gsData,ptsData);
     
+    % Match pairs and display them
+    indexPairs = matchFeatures(featurePattern,featureData);
+    matchedPattern = validPtsPattern(indexPairs(:,1));
+    matchedData = validPtsData(indexPairs(:,2));
+    
+    showMatchedFeatures(squarePattern, gsData,matchedPattern ,matchedData)
+
     % Delay
-    pause(2);
+    pause(1);
 end
 
 
