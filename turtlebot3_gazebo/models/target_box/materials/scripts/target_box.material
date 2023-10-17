@@ -6,7 +6,7 @@ material target_box/Diffuse
     {      
       texture_unit
       {
-        texture FollowMeSkinSat.002.png
+        texture Square_texture.png
       }            
     }
   }
