@@ -21,6 +21,15 @@ odom = rossubscriber('/odom');
 % Reading Square pattern
 squarePattern = rgb2gray(imread('Initial_image.png'));
 
+% Define target orientation (perpendicular to the pattern)
+targetOrientation = 0; % Adjust as needed
+
+% Define control parameters (adjust as needed)
+Kp = 0.1; % Proportional gain
+Kd = 0.05; % Derivative gain
+
+previousError = 0;
+
 %% Operation
 while true
     disp("Running...")
@@ -46,13 +55,39 @@ while true
     indexPairs = matchFeatures(featurePattern, featureData);
     matchedPattern = validPtsPattern(indexPairs(:, 1));
     matchedData = validPtsData(indexPairs(:, 2));
-    % disp(toc)
-    showMatchedFeatures(squarePattern, gsData, matchedPattern, matchedData)
-    % disp(toc)
+    
+    % Remove outliers
+    [~,inlierData,inlierPattern] = estimateGeometricTransform(matchedData, matchedPattern,'similarity');
 
+    % For every valid match, obtain the depth data
+    depthPts = zeros(1, inlierData.Count);
+    
+    for i = 1:inlierData.Count
+        depthPts(i) = depthData(round(inlierData.Location(i, 2)), round(inlierData.Location(i, 1)));
+    end
+    
+    % Calculate the average depth
+    averageDepth = mean(depthPts);
 
-    size(indexPairs, 1)
+    % Calculate the orientation error
+    currentOrientation = atan2(rotMatrix(2, 1), rotMatrix(1, 1));
+    orientationError = targetOrientation - currentOrientation;
 
+    % Apply a PID controller to adjust the robot's movement
+    controlInput = Kp * orientationError + Kd * (orientationError - previousError);
+
+    % Update previous error
+    previousError = orientationError;
+
+    % Adjust the robot's movement
+    msg.Angular.Z = controlInput;
+    
+    % Publish control commands
+    send(drive, msg);
+    
+    % Display depth and orientation error
+    disp(['Average Depth: ', num2str(averageDepth)]);
+    disp(['Orientation Error: ', num2str(orientationError)]);
 
     % Delay
     pause(1);
