@@ -21,18 +21,47 @@ odom = rossubscriber('/odom');
 % Reading Square pattern
 squarePattern = rgb2gray(imread('Initial_image.png'));
 
-% Define target orientation (perpendicular to the pattern)
-targetOrientation = 0; % Adjust as needed
 
-% Define control parameters (adjust as needed)
-Kp = 0.1; % Proportional gain
-Kd = 0.05; % Derivative gain
-
-previousError = 0;
+% Pause to wait for ROS
+pause(2);
 
 %% Operation
 while true
     disp("Running...")
+    
+    [controlInput,averageDepth,orientationError] = dataProcessing(rgb,depth,odom,squarePattern);
+    
+
+    % Adjust the robot's movement
+    if abs(controlInput) >= 0.01
+        msg.Angular.Z = controlInput;
+        disp("Turning")
+    else
+        msg.Angular.Z = 0;
+        disp("Stopped")
+    end
+    
+    
+    % Publish control commands
+    send(drive, msg);
+    
+    % Display depth and orientation error
+    disp(['controlInput: ', num2str(controlInput)]);
+    % disp(['Average Depth: ', num2str(averageDepth)]);
+    % disp(['Orientation Error: ', num2str(orientationError)]);
+
+    % Delay
+    pause(1);
+end
+
+function [controlInput,averageDepth,orientationError]  = dataProcessing(rgb,depth,odom,squarePattern)
+    % Define target orientation (perpendicular to the pattern)
+    targetOrientation = 0; % Adjust as needed
+    previousError = 0;
+
+    % Define control parameters (adjust as needed)
+    Kp = 0.1; % Proportional gain
+    Kd = 0.05; % Derivative gain
 
     % Pull Rotation and transformation matrices
     turtleTF = trvec2tform([odom.LatestMessage.Pose.Pose.Position.X, odom.LatestMessage.Pose.Pose.Position.Y, odom.LatestMessage.Pose.Pose.Position.Z]);
@@ -45,7 +74,6 @@ while true
     [depthData, ~] = readImage(depth.LatestMessage);
 
     % Feature Detection
-    tic
     ptsPattern = detectSURFFeatures(squarePattern);
     ptsData = detectSURFFeatures(gsData);
     [featurePattern, validPtsPattern] = extractFeatures(squarePattern, ptsPattern);
@@ -78,17 +106,5 @@ while true
 
     % Update previous error
     previousError = orientationError;
-
-    % Adjust the robot's movement
-    msg.Angular.Z = controlInput;
-    
-    % Publish control commands
-    send(drive, msg);
-    
-    % Display depth and orientation error
-    disp(['Average Depth: ', num2str(averageDepth)]);
-    disp(['Orientation Error: ', num2str(orientationError)]);
-
-    % Delay
-    pause(1);
 end
+
