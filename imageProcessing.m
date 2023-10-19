@@ -31,64 +31,92 @@ Kp = 0.1; % Proportional gain
 Kd = 0.05; % Derivative gain
 
 %% Operation
-while true
-    disp("Running...")
 
-    [rotMatrix, targetOrientation, intersectionX, intersectionY] = dataProcessing(rgb, depth, odom, squarePattern);
+disp("Running...")
+
+% Initial States
+[rotMatrix, targetOrientation, intersectionX, intersectionY] = dataProcessing(rgb, depth, odom, squarePattern);
+robotX = odom.LatestMessage.Pose.Pose.Position.X;
+robotY = odom.LatestMessage.Pose.Pose.Position.Y;
+distance = sqrt((robotX - intersectionX)^2+(robotY - intersectionY)^2);
+inIntersection = false;
+
+
+% Rotate until the feature is found
+
+
+
+
+
+
+
+% Update nessesary variables at 0.1 second intervals
+while abs(distance) > 0 && inIntersection == false
+    disp("Updating States")
+    counter = 0;
+
+    turtleQuat = quaternion([odom.LatestMessage.Pose.Pose.Orientation.W, odom.LatestMessage.Pose.Pose.Orientation.X, odom.LatestMessage.Pose.Pose.Orientation.Y, odom.LatestMessage.Pose.Pose.Orientation.Z]);
+    rotMatrix = rotm2tform(rotmat(turtleQuat, 'point'));
+
     robotX = odom.LatestMessage.Pose.Pose.Position.X;
     robotY = odom.LatestMessage.Pose.Pose.Position.Y;
-    distance = sqrt((robotX - intersectionX)^2+(robotY - intersectionY)^2)
 
-    while abs(distance) > 0
-        disp("INLOOP")
-        counter = 0;
+    % Calculate the orientation error
+    currentOrientation = atan2(rotMatrix(2, 1), rotMatrix(1, 1));
+    orientationError = targetOrientation - currentOrientation;
 
-        turtleQuat = quaternion([odom.LatestMessage.Pose.Pose.Orientation.W, odom.LatestMessage.Pose.Pose.Orientation.X, odom.LatestMessage.Pose.Pose.Orientation.Y, odom.LatestMessage.Pose.Pose.Orientation.Z]);
-        rotMatrix = rotm2tform(rotmat(turtleQuat, 'point'));
+    % Apply a PID controller to adjust the robot's movement
+    controlInput = Kp * orientationError + Kd * (orientationError - previousError);
 
-        robotX = odom.LatestMessage.Pose.Pose.Position.X;
-        robotY = odom.LatestMessage.Pose.Pose.Position.Y;
-
-        % Calculate the orientation error
-        currentOrientation = atan2(rotMatrix(2, 1), rotMatrix(1, 1))
-        orientationError = targetOrientation - currentOrientation
-
-        % Apply a PID controller to adjust the robot's movement
-        controlInput = Kp * orientationError + Kd * (orientationError - previousError);
-
-        % Update previous error
-        previousError = orientationError;
-        distance = sqrt((robotX - intersectionX)^2+(robotY - intersectionY)^2)
-        % Adjust the robot's movement
-        while counter < 100
-            if abs(controlInput) >= 0.01
-                msg.Angular.Z = controlInput;
-                disp("Turning")
-                % Publish control commands UNCOMMENT WHEN SENDING DATA
+    % Update previous error
+    previousError = orientationError;
+    distance = sqrt((robotX - intersectionX)^2+(robotY - intersectionY)^2);
+    % Adjust the robot's movement
+    
+    % Rotate to intersection point and drive there
+    while counter < 100
+        if abs(controlInput) >= 0.01
+            msg.Angular.Z = controlInput;
+            disp("Turning")
+            % Publish control commands UNCOMMENT WHEN SENDING DATA
+            send(drive, msg);
+        else
+            msg.Angular.Z = 0;
+            disp("Aligned")
+            % Publish control commands UNCOMMENT WHEN SENDING DATA
+            send(drive, msg);
+            while abs(distance) > 0.05
+                disp("Driving forward")
+                msg.Linear.X = 0.1;
                 send(drive, msg);
-            else
-                msg.Angular.Z = 0;
-                disp("Stopped")
-                % Publish control commands UNCOMMENT WHEN SENDING DATA
-                send(drive, msg);
-                break;
+                robotX = odom.LatestMessage.Pose.Pose.Position.X;
+                robotY = odom.LatestMessage.Pose.Pose.Position.Y;
+                distance = sqrt((robotX - intersectionX)^2+(robotY - intersectionY)^2);
             end
-            counter = counter + 1;
+            disp("Arrived at Intersection")
+            msg.Linear.X = 0;
+            send(drive, msg);
+            inIntersection = true;
+            break;
         end
-        pause(0.1)
-
+        counter = counter + 1;
     end
-    disp("BROKE OUT OF LOOP")
-    break;
+    pause(0.1)
 
-
-    % Display depth and orientation error
-    disp(['controlInput: ', num2str(controlInput)]);
-
-
-    % Delay
-    pause(1);
 end
+
+
+
+% Rotate back to the feature
+
+
+
+
+
+
+
+disp("Finished")
+
 profile viewer
 profile off
 
@@ -165,10 +193,6 @@ averageFeature = mean(features2base, 2);
 
 % Fit a plane to the point cloud
 [featurePlane, inlierIndices, outlierIndices] = pcfitplane(ptCloud, 1);
-
-%     plane2 = select(ptCloud, inlierIndices);
-%     figure ;
-%     pcshow(plane2);
 
 % Unnormalised Normal has variants
 var1 = featurePlane.Normal(:); % Variation 1 of Normal
