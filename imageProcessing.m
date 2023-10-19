@@ -40,7 +40,7 @@ while true
     end
 
     % Publish control commands UNCOMMENT WHEN SENDING DATA
-%     send(drive, msg); 
+    send(drive, msg); 
 
     % Display depth and orientation error
     disp(['controlInput: ', num2str(controlInput)]);
@@ -125,20 +125,32 @@ function [controlInput, orientationError] = dataProcessing(rgb, depth, odom, squ
     end
 
     % Form point cloud from feature points and find the average point
-    ptCloud = pointCloud(features2base(1:3,:)');
+    ptCloud = pointCloud(features2base(1:3,:)')
     averageFeature = mean(features2base,2);
     
     % Fit a plane to the point cloud
-    featurePlane = pcfitplane(ptCloud, 1);
-    featureNormalVec = [featurePlane.Normal(1) featurePlane.Normal(2) averageFeature(1) averageFeature(2)];
-    robotNormalVec = [-featurePlane.Normal(2) featurePlane.Normal(1) 0 0];
+    [featurePlane,inlierIndices,outlierIndices] = pcfitplane(ptCloud, 1);
     
-    % Find intersection point
-    [xIn,yIn] = LineIntersection(featureNormalVec,robotNormalVec)
-    
-    % Angle to intersection point from robot
-    targetAngle = CalculateAngleToIntersection(odom.LatestMessage.Pose.Pose.Position.X, odom.LatestMessage.Pose.Pose.Position.Y,xIn,yIn)
-    
+%     plane2 = select(ptCloud, inlierIndices);
+%     figure ;
+%     pcshow(plane2);
+
+    % Unnormalised Normal has variants
+    var1 = featurePlane.Normal(:); % Variation 1 of Normal
+    var2 = var1 * -1; % Variation 2 of Normal
+   
+    featureNormalVec1 = [var1(1) var1(2) averageFeature(1) averageFeature(2)];
+    featureNormalVec2 = [var2(1) var2(2) averageFeature(1) averageFeature(2)];
+
+    robotNormalVec1 = [-var1(2) var1(1) 0 0];
+    robotNormalVec2 = [-var2(2) var2(1) 0 0];
+
+    % Find intersection points
+    [xIn1,yIn1] = LineIntersection(featureNormalVec1,robotNormalVec1)
+    [xIn2,yIn2] = LineIntersection(featureNormalVec2,robotNormalVec2)
+
+    % Angle to cloest intersection point from robot
+    targetAngle = CalculateAngleToIntersection(odom.LatestMessage.Pose.Pose.Position.X, odom.LatestMessage.Pose.Pose.Position.Y,xIn1,yIn1, xIn2,yIn2)
 
     % Define target orientation (perpendicular to the pattern)
     targetOrientation = targetAngle; % Adjust as needed
