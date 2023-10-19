@@ -6,7 +6,7 @@ function [xIn, yIn] = LineIntersection(vec1, vec2)
     % Output:
     % - xIn: x-coordinate of the intersection point
     % - yIn: y-coordinate of the intersection point
-
+    
     % Calculate the intersection point of two lines
     % Intersection point formula derived from the equation of two lines
     xIn = (vec2(2) * vec1(3) - vec1(2) * vec2(3)) / (vec2(1) * vec1(2) - vec1(1) * vec2(2));
