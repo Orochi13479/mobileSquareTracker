@@ -28,7 +28,7 @@ pause(2);
 while true
     disp("Running...")
 
-    [controlInput, averageDepth, orientationError] = dataProcessing(rgb, depth, odom, squarePattern);
+    [controlInput, orientationError] = dataProcessing(rgb, depth, odom, squarePattern);
 
     % Adjust the robot's movement
     if abs(controlInput) >= 0.01
@@ -39,21 +39,20 @@ while true
         disp("Stopped")
     end
 
-    % Publish control commands
-    send(drive, msg);
+    % Publish control commands UNCOMMENT WHEN SENDING DATA
+%     send(drive, msg); 
 
     % Display depth and orientation error
     disp(['controlInput: ', num2str(controlInput)]);
-    % disp(['Average Depth: ', num2str(averageDepth)]);
-    % disp(['Orientation Error: ', num2str(orientationError)]);
+    
 
     % Delay
     pause(1);
 end
 
-function [controlInput, averageDepth, orientationError, perpendicularLine] = dataProcessing(rgb, depth, odom, squarePattern)
-    % Define target orientation (perpendicular to the pattern)
-    targetOrientation = deg2rad(90); % Adjust as needed
+function [controlInput, orientationError] = dataProcessing(rgb, depth, odom, squarePattern)
+    tic
+    
     previousError = 0;
     
     % Different Frame poses relative each other copied from model file
@@ -64,7 +63,7 @@ function [controlInput, averageDepth, orientationError, perpendicularLine] = dat
     base2optical = trvec2tform(base2image_joint) * trvec2tform(image_joint2camera) * eul2tform(deg2rad(camera2optical), "XYZ"); % Base to optical frame
     
     % Camera calibration and distortion parameters
-    K = [1206.89, 0.0, 960.5, 0.0, 1206.89, 540.5, 0.0, 0.0, 1.0]; % rostopic echocamera/rgb/camera_info 
+    K = [1206.89, 0.0, 960.5; 0.0, 1206.89, 540.5; 0.0, 0.0, 1.0]; % rostopic echocamera/rgb/camera_info 
 
 
     % Define control parameters (adjust as needed)
@@ -95,15 +94,19 @@ function [controlInput, averageDepth, orientationError, perpendicularLine] = dat
 
     % Remove outliers
     [~, inlierData, inlierPattern] = estimateGeometricTransform(matchedData, matchedPattern, 'similarity');
+    
+    % Number of features
+    numFeatures = inlierData.Count;
 
     % Preallocate arrays for efficiency
-    numFeatures = inlierData.Count;
-    depthPts = zeros(1, numFeatures);
-    features2base = nan(3, numFeatures);
-        
+    depthPts = zeros(1,numFeatures);
+    featurePts = zeros(3, numFeatures);
+    features2camera = zeros(3, numFeatures);
+    features2base=    zeros(4, numFeatures);
+
     % Match depth data with feature pts and transform to base frame for
     % later use
-    for i = 1:inlierData.Count
+    for i = 1:numFeatures
         % Extract feature location indices
         featureRow = round(inlierData.Location(i, 2));
         featureCol = round(inlierData.Location(i, 1));
@@ -112,30 +115,46 @@ function [controlInput, averageDepth, orientationError, perpendicularLine] = dat
         depthPts(i) = depthData(featureRow, featureCol);
         
         % Calculate the camera coordinates of the feature
-        featurePts = [depthPts(i) * featureCol; depthPts(i) * featureRow; depthPts(i)];
+        featurePts(:,i) = [depthPts(i) * featureCol; depthPts(i) * featureRow; depthPts(i)];
         % Features in the camera frame
-        features2camera = K \ featurePts;
+        features2camera(:,i) = K \ featurePts(:,i);
         
         % Extend the 3D point to homogeneous coordinates and transform to the base frame
-        homogeneousCoords = [features2camera; 1];
+        homogeneousCoords = [features2camera(:,i); 1];
         features2base(:, i) = base2optical * homogeneousCoords;
     end
 
-
-    % Calculate the average depth
-    averageDepth = mean(depthPts);
-
-    % Calculate the orientation error
-    currentOrientation = atan2(rotMatrix(2, 1), rotMatrix(1, 1));
-    orientationError = targetOrientation - currentOrientation;
-
+    % Form point cloud from feature points and find the average point
+    ptCloud = pointCloud(features2base(1:3,:)');
+    averageFeature = mean(features2base,2);
+    
+    % Fit a plane to the point cloud
+    featurePlane = pcfitplane(ptCloud, 1);
+    featureNormalVec = [featurePlane.Normal(1) featurePlane.Normal(2) averageFeature(1) averageFeature(2)];
+    robotNormalVec = [-featurePlane.Normal(2) featurePlane.Normal(1) 0 0];
+    
+    % Find intersection point
+    [xIn,yIn] = LineIntersection(featureNormalVec,robotNormalVec)
+    
+    % Angle to intersection point from robot
+    targetAngle = CalculateAngleToIntersection(odom.LatestMessage.Pose.Pose.Position.X, odom.LatestMessage.Pose.Pose.Position.Y,xIn,yIn)
     
 
+    % Define target orientation (perpendicular to the pattern)
+    targetOrientation = targetAngle; % Adjust as needed
+
+   % Calculate the orientation error
+    currentOrientation = atan2(rotMatrix(2, 1), rotMatrix(1, 1));
+    orientationError = targetOrientation - currentOrientation;
+    
     % Apply a PID controller to adjust the robot's movement
     controlInput = Kp * orientationError + Kd * (orientationError - previousError);
 
     % Update previous error
     previousError = orientationError;
+
+    % Time to Process all data points (Needs to be less than cycle time e.g. 1 second)
+    disp("Processing Time: " + num2str(toc) );
 end
 
 
