@@ -34,7 +34,6 @@ Kd = 0.05; % Derivative gain
 
 disp("Running...")
 
-
 [~, ~, ~, ~, featureDetected] = dataProcessing(rgb, depth, odom, squarePattern);
 
 % Rotate until the feature is found
@@ -51,9 +50,7 @@ disp("Feature Found")
 % Publish control commands UNCOMMENT WHEN SENDING DATA
 send(drive, msg);
 
-pause(5);
-
-
+pause(1);
 
 % Initial States
 [~, targetOrientation, intersectionX, intersectionY, ~] = dataProcessing(rgb, depth, odom, squarePattern);
@@ -64,7 +61,7 @@ inIntersection = false;
 
 % Update nessesary variables at 0.1 second intervals
 while abs(distance) > 0 && inIntersection == false
-    
+
     counter = 0;
 
     turtleQuat = quaternion([odom.LatestMessage.Pose.Pose.Orientation.W, odom.LatestMessage.Pose.Pose.Orientation.X, odom.LatestMessage.Pose.Pose.Orientation.Y, odom.LatestMessage.Pose.Pose.Orientation.Z]);
@@ -84,7 +81,7 @@ while abs(distance) > 0 && inIntersection == false
     previousError = orientationError;
     distance = sqrt((robotX - intersectionX)^2+(robotY - intersectionY)^2);
     % Adjust the robot's movement
-    
+
     % Rotate to intersection point and drive there
     while counter < 100
         if abs(controlInput) >= 0.01
@@ -102,7 +99,7 @@ while abs(distance) > 0 && inIntersection == false
                 robotX = odom.LatestMessage.Pose.Pose.Position.X;
                 robotY = odom.LatestMessage.Pose.Pose.Position.Y;
                 distance = sqrt((robotX - intersectionX)^2+(robotY - intersectionY)^2);
-                disp("Distance: " + num2str(distance))
+                disp("Distance: "+num2str(distance))
                 pause(0.05)
             end
             disp("Arrived at Intersection")
@@ -114,16 +111,13 @@ while abs(distance) > 0 && inIntersection == false
         counter = counter + 1;
     end
     pause(0.1)
-    disp("orientationError: " + num2str(orientationError))
+    disp("orientationError: "+num2str(orientationError))
 
 end
-
-
 
 % Rotate back to the feature
 
 [~, ~, ~, ~, featureDetected] = dataProcessing(rgb, depth, odom, squarePattern);
-
 
 % Rotate until the feature is found
 while featureDetected == false
@@ -139,10 +133,6 @@ disp("Feature Found")
 % Publish control commands UNCOMMENT WHEN SENDING DATA
 send(drive, msg);
 
-
-
-
-
 disp("Finished")
 
 profile viewer
@@ -150,7 +140,6 @@ profile off
 
 function [rotMatrix, targetOrientation, intersectionX, intersectionY, featureDetected] = dataProcessing(rgb, depth, odom, squarePattern)
 tic
-
 
 % Different Frame poses relative each other copied from model file
 base2image_joint = [0.064, -0.065, 0.094]; % Base to image_joint
@@ -166,7 +155,6 @@ K = [1206.89, 0.0, 960.5; 0.0, 1206.89, 540.5; 0.0, 0.0, 1.0]; % rostopic echoca
 turtleTF = trvec2tform([odom.LatestMessage.Pose.Pose.Position.X, odom.LatestMessage.Pose.Pose.Position.Y, odom.LatestMessage.Pose.Pose.Position.Z]);
 turtleQuat = quaternion([odom.LatestMessage.Pose.Pose.Orientation.W, odom.LatestMessage.Pose.Pose.Orientation.X, odom.LatestMessage.Pose.Pose.Orientation.Y, odom.LatestMessage.Pose.Pose.Orientation.Z]);
 rotMatrix = rotm2tform(rotmat(turtleQuat, 'point'));
-turtleTF2World = turtleTF * rotMatrix;
 
 % Pull Image and Depth data
 [rgbData, ~] = readImage(rgb.LatestMessage);
@@ -189,62 +177,61 @@ if length(indexPairs) < 12
     length(indexPairs)
     featureDetected = false;
     [targetOrientation, intersectionX, intersectionY] = deal(0);
-
-else 
+else
     featureDetected = true;
     length(indexPairs)
 end
 
 if featureDetected
     % Remove outliers
-    [~, inlierData, inlierPattern] = estimateGeometricTransform(matchedData, matchedPattern, 'similarity');
-    
+    [~, inlierData, ~] = estimateGeometricTransform(matchedData, matchedPattern, 'similarity');
+
     % Number of features
     numFeatures = inlierData.Count;
-    
+
     % Preallocate arrays for efficiency
     depthPts = zeros(1, numFeatures);
     featurePts = zeros(3, numFeatures);
     features2camera = zeros(3, numFeatures);
     features2base = zeros(4, numFeatures);
-    
+
     % Match depth data with feature pts and transform to base frame for
     % later use
     for i = 1:numFeatures
         % Extract feature location indices
         featureRow = round(inlierData.Location(i, 2));
         featureCol = round(inlierData.Location(i, 1));
-    
+
         % Extract depth from the depth image
         depthPts(i) = depthData(featureRow, featureCol);
-    
+
         % Calculate the camera coordinates of the feature
         featurePts(:, i) = [depthPts(i) * featureCol; depthPts(i) * featureRow; depthPts(i)];
         % Features in the camera frame
         features2camera(:, i) = K \ featurePts(:, i);
-    
+
         % Extend the 3D point to homogeneous coordinates and transform to the base frame
         homogeneousCoords = [features2camera(:, i); 1];
         features2base(:, i) = base2optical * homogeneousCoords;
     end
-    
+
     % Form point cloud from feature points and find the average point
     ptCloud = pointCloud(features2base(1:3, :)');
     averageFeature = mean(features2base, 2);
-    
+
     % Fit a plane to the point cloud
     [featurePlane, ~, ~] = pcfitplane(ptCloud, 1);
-    
+
     % Unnormalised Normal has variants
     var1 = featurePlane.Normal(:); % Variation 1 of Normal
     var2 = var1 * -1; % Variation 2 of Normal
-    
+
     featureNormalVec1 = [var1(1), var1(2), averageFeature(1), averageFeature(2)];
     featureNormalVec2 = [var2(1), var2(2), averageFeature(1), averageFeature(2)];
-    
+
     robotNormalVec1 = [-var1(2), var1(1), 0, 0];
     robotNormalVec2 = [-var2(2), var2(1), 0, 0];
-    
+
     % Find intersection points
     [xIn1, yIn1] = LineIntersection(featureNormalVec1, robotNormalVec1);
     [xIn2, yIn2] = LineIntersection(featureNormalVec2, robotNormalVec2);
