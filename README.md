@@ -16,21 +16,18 @@ robot with noise in the observation.
 # Running the Simulation
 To Launch the simulator and run the Mobile Square Tracker script, open a terminal and input the below:
 
-##Terminal##
+
 ```
 export TURTLEBOT3_MODEL=waffle
 roslaunch turtlebot3_gazebo turtlebot3_testingTargetBox.launch 
 ```
 
-Once launched Run the #Initialise Section ONCE# in provided script, imageProcessing.m, then proceed to run the operation section in MATLAB 2021b using ROS melodic.
+Once launched, open the script "imageProcessing.m" then proceed to run the operation section in MATLAB 2021b using ROS melodic.
 
-The project operates in detecting the features on a square object within the Gazebo world 
+The project operates in detecting the features on a square object within the Gazebo world. The Turtlebot is set in the Gazebo environment with objects, walls and surfaces to simulate the environment it acts in. 
 
-Once the image processing is 
+During the image processing phase of the square object, features of the square are detected by the RGB-D camera attatched onto the Turtlebot. SURF feature detection is utilised to ensure accurate detection but also to maintain computing cost. A PID controller is implemeneted to adjust the Turtlebot's movement and updates as it detects the square. This will also ensure that movement reduces errors prone to sudden changes in acceleration or deceleration.
+The Turtlebot, once processing the square will navigate perpendicular to the square object.
 
 **PROJECT HAS ONLY BEEN TESTED IN MATLAB 2021b USING ROS melodic.**
-
-
-finds a feature
-rotates perpedicular 
 
