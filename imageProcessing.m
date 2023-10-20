@@ -122,7 +122,7 @@ end
 % Rotate until the feature is found
 while featureDetected == false
     [~, ~, ~, ~, featureDetected] = dataProcessing(rgb, depth, odom, squarePattern);
-    msg.Angular.Z = 0.5;
+    msg.Angular.Z = 0.5; % Matthew: 0.5, Daniel: 0.35
     disp("Finding feature")
     % Publish control commands UNCOMMENT WHEN SENDING DATA
     send(drive, msg);
