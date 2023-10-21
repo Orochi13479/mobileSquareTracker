@@ -22,7 +22,7 @@ export TURTLEBOT3_MODEL=waffle
 roslaunch turtlebot3_gazebo turtlebot3_testingTargetBox.launch 
 ```
 
-Once launched, open the script "imageProcessing.m" then proceed to run the operation section in MATLAB 2021b using ROS melodic.
+Once launched, open the script "main.m" then proceed to run the operation section in MATLAB 2021b using ROS melodic.
 
 The project operates in detecting the features on a square object within the Gazebo world. The Turtlebot is set in the Gazebo environment with objects, walls and surfaces to simulate the environment it acts in. 
 
