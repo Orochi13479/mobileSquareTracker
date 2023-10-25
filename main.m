@@ -23,7 +23,7 @@ odom = rossubscriber('/odom');
 squarePattern = rgb2gray(imread('Initial_image.png'));
 
 % Pause to wait for ROS
-pause(2);
+pause(5);
 
 previousError = 0;
 % Define control parameters (adjust as needed)
