@@ -32,7 +32,7 @@ The Turtlebot, once processing the square will navigate perpendicular to the squ
 **PROJECT HAS ONLY BEEN TESTED IN MATLAB 2021b USING ROS MELODIC, YOUR RESULTS MAY VARY WITH OTHER DISTROS AND VERSIONS.**
 
 <b>Contribution:</b>
-40% Matthew - @Orochi13479
-30% Daniel - @daniell-lo
+40% Matthew - @Orochi13479\
+30% Daniel - @daniell-lo\
 30% Rosh - @rosh218
 

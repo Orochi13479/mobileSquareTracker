@@ -96,12 +96,11 @@ if featureDetected
     [xIn1, yIn1] = LineIntersection(featureNormalVec1, robotNormalVec1);
     [xIn2, yIn2] = LineIntersection(featureNormalVec2, robotNormalVec2);
 
+    % Angle to closest intersection point from robot
     [targetOrientation, intersectionX, intersectionY] = CalculateAngleToIntersection(odom.LatestMessage.Pose.Pose.Position.X, odom.LatestMessage.Pose.Pose.Position.Y, xIn1, yIn1, xIn2, yIn2);
-    disp("here")
+
 end
-% Angle to cloest intersection point from robot
-intersectionX
-intersectionY
+
 % Time to Process all data points (Needs to be less than cycle time e.g. 1 second)
 disp("Processing Time: "+num2str(toc));
 end
