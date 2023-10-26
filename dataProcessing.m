@@ -12,7 +12,6 @@ base2optical = trvec2tform(base2image_joint) * trvec2tform(image_joint2camera) *
 K = [1206.89, 0.0, 960.5; 0.0, 1206.89, 540.5; 0.0, 0.0, 1.0]; % rostopic echocamera/rgb/camera_info
 
 % Pull Rotation and transformation matrices
-turtleTF = trvec2tform([odom.LatestMessage.Pose.Pose.Position.X, odom.LatestMessage.Pose.Pose.Position.Y, odom.LatestMessage.Pose.Pose.Position.Z]);
 turtleQuat = quaternion([odom.LatestMessage.Pose.Pose.Orientation.W, odom.LatestMessage.Pose.Pose.Orientation.X, odom.LatestMessage.Pose.Pose.Orientation.Y, odom.LatestMessage.Pose.Pose.Orientation.Z]);
 rotMatrix = rotm2tform(rotmat(turtleQuat, 'point'));
 
@@ -34,12 +33,10 @@ matchedData = validPtsData(indexPairs(:, 2));
 
 % If 4 pairs are detected we count a feature as being found
 if length(indexPairs) < 12
-    length(indexPairs)
     featureDetected = false;
     [targetOrientation, intersectionX, intersectionY] = deal(0);
 else
     featureDetected = true;
-    length(indexPairs)
 end
 
 if featureDetected

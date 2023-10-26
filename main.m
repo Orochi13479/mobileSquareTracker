@@ -32,7 +32,7 @@ Kp = 0.5; % Proportional gain
 Kd = 0.25; % Derivative gain
 
 % Operation
-disp("Running...")
+disp("Starting...")
 
 [~, ~, ~, ~, featureDetected] = dataProcessing(rgb, depth, odom, squarePattern);
 
@@ -59,7 +59,7 @@ robotY = odom.LatestMessage.Pose.Pose.Position.Y;
 distance = sqrt((robotX - intersectionX)^2+(robotY - intersectionY)^2);
 inIntersection = false;
 
-disp("Intersection Point X: "+num2str(intersectionX)+"Y: "+num2str(intersectionY));
+disp("Intersection Point x: "+num2str(intersectionX)+" y: "+num2str(intersectionY));
 
 % Update nessesary variables at 0.1 second intervals
 while abs(distance) > 0 && inIntersection == false
@@ -101,7 +101,7 @@ while abs(distance) > 0 && inIntersection == false
                 robotX = odom.LatestMessage.Pose.Pose.Position.X;
                 robotY = odom.LatestMessage.Pose.Pose.Position.Y;
                 distance = sqrt((robotX - intersectionX)^2+(robotY - intersectionY)^2);
-                disp("Distance: "+num2str(distance))
+                disp("Distance to intersection: "+num2str(distance))
                 pause(0.05)
             end
             disp("Arrived at Intersection")
@@ -113,7 +113,7 @@ while abs(distance) > 0 && inIntersection == false
         counter = counter + 1;
     end
     pause(0.1)
-    disp("orientationError: "+num2str(orientationError))
+    disp("Rotatation Error: "+num2str(orientationError))
 end
 
 [~, ~, ~, ~, featureDetected] = dataProcessing(rgb, depth, odom, squarePattern);
@@ -122,7 +122,7 @@ end
 while featureDetected == false
     [~, ~, ~, ~, featureDetected] = dataProcessing(rgb, depth, odom, squarePattern);
     msg.Angular.Z = 0.4; % May need Tuning based on system specs
-    disp("Finding feature")
+    disp("Finding feature...")
     % Publish control commands
     send(drive, msg);
     pause(0.1);
@@ -130,6 +130,20 @@ end
 msg.Angular.Z = 0;
 disp("Feature Found")
 % Publish control commands
+send(drive, msg);
+
+% Drive forward to sqaure
+disp("Driving Toward Feature")
+counter = 0;
+while counter < 30
+    msg.Linear.X = 0.1;
+    send(drive, msg);
+    counter = counter + 1;
+    pause(0.1)
+end
+
+% Stopping
+msg.Linear.X = 0;
 send(drive, msg);
 
 disp("Finished")
