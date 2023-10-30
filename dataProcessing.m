@@ -9,7 +9,7 @@ image_joint2camera = base2camera - base2image_joint; % image_joint to camera
 base2optical = trvec2tform(base2image_joint) * trvec2tform(image_joint2camera) * eul2tform(deg2rad(camera2optical), "XYZ"); % Base to optical frame
 
 % Camera calibration and distortion parameters
-K = [1206.89, 0.0, 960.5; 0.0, 1206.89, 540.5; 0.0, 0.0, 1.0]; % rostopic echocamera/rgb/camera_info
+K = [1206.89, 0.0, 960.5; 0.0, 1206.89, 540.5; 0.0, 0.0, 1.0]; % rostopic echo camera/rgb/camera_info
 
 % Pull Rotation and transformation matrices
 turtleQuat = quaternion([odom.LatestMessage.Pose.Pose.Orientation.W, odom.LatestMessage.Pose.Pose.Orientation.X, odom.LatestMessage.Pose.Pose.Orientation.Y, odom.LatestMessage.Pose.Pose.Orientation.Z]);
@@ -30,6 +30,8 @@ ptsData = detectSURFFeatures(gsData);
 indexPairs = matchFeatures(featurePattern, featureData);
 matchedPattern = validPtsPattern(indexPairs(:, 1));
 matchedData = validPtsData(indexPairs(:, 2));
+% figure Name Outliers
+% showMatchedFeatures(squarePattern,gsData,matchedPattern,matchedData)
 
 % If 4 pairs are detected we count a feature as being found
 if length(indexPairs) < 12
@@ -41,7 +43,11 @@ end
 
 if featureDetected
     % Remove outliers
-    [~, inlierData, ~] = estimateGeometricTransform(matchedData, matchedPattern, 'similarity');
+    
+    [~, inlierData, inlierPattern] = estimateGeometricTransform(matchedData, matchedPattern, 'similarity');
+
+    % figure Name Inliers
+    % showMatchedFeatures(squarePattern,gsData,inlierPattern,inlierData)
 
     % Number of features
     numFeatures = inlierData.Count;

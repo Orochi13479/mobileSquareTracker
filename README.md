@@ -1,12 +1,5 @@
 # Square Following Turtlebot 
-This project aims to control the robot to follow a straight line by
-using the information observed from a sensor on-board the robot.
-Suppose there is a square in front of the robot, and there is a
-sensor which can observe the positions of the 4 corners of the
-square in the current robot coordinate frame. Control the robot to
-follow a straight line which is perpendicular to the square. Use
-Turtlebot or Simulator and design the environment to control the
-robot with noise in the observation.
+This project aims to demonstrate how a robot can follow a straight line perpendicular to the surface of a feature-rich square. It first constructs a point cloud of the square face using SURF(Speeded-Up Robust Features), from there it determines where the normal of the face and the normal of the robot intersect. The robot then travels to this intersection point and rotates back to face the square. To demonstrate competency in feature recognition algorithms only an RGB-D sensor, combined with robot pose is used to localize and path plan, a PD controller is also used to emulate smooth motion. We use Gazebo combined with turtlebot3 packages for our simulation, ROS for robot communication and MATLAB for our computations.
 
 <b><i>Required Software:</i></b>
 - Ubuntu 18.04
@@ -14,6 +7,11 @@ robot with noise in the observation.
 - MATLAB 2021b
 - Turtlebot3 Packages
 
+# Setup
+To install custom environments/launch files, copy turtlebot3_gazebo Directory on top of your current catkin_ws/src/turtlebot3_gazebo and replace files if prompted this should place the required files in the correct Directories. If this fails manually drop and place the files into their corresponding directories.
+```
+catkin_make
+```
 # Running the Simulation
 To Launch the simulator and run the Mobile Square Tracker script, open a terminal and input the below:
 
